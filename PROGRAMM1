@@ -4,8 +4,6 @@ CREATE TABLE PUBLISHER(
 NAME VARCHAR2(20) PRIMARY KEY,
 ADDRESS VARCHAR2(20),
 PHONE NUMBER(10));
-
-
 INSERT INTO PUBLISHER VALUES('Pearson','Londen',9874522224);
 INSERT INTO PUBLISHER VALUES('TataMcGraw','NewYork',9858523585);
 INSERT INTO PUBLISHER VALUES('Oxford','UK',9885121112);
@@ -190,7 +188,164 @@ DUE_DATE DATE,
 PRIMARY KEY (PROGRAMME_ID,BOOK_ID, CARD_NO),
 FOREIGN KEY(BOOK_ID) REFERENCES BOOK(BOOK_ID) ON DELETE CASCADE,
 FOREIGN KEY(PROGRAMME_ID) REFERENCES LIBRARY_PROGRAMME(PROGRAMME_ID) ON DELETE CASCADE,
-CONSTRAINT CK1 CHECK (DUE_DATE>DUE_DATE));
+CONSTRAINT CK1 CHECK (DUE_DATE>DATE_OUT));
+
+INSERT INTO BOOK_LENDING VALUES('B101','L1','FA101','02-JAN-21','09-JAN-21');
+INSERT INTO BOOK_LENDING VALUES('B101','L1','FA102','02-MAR-23','09-MAR-23');
+INSERT INTO BOOK_LENDING VALUES('B102','L1','FA102','02-MAR-23','09-MAR-23');
+INSERT INTO BOOK_LENDING VALUES('B101','L2','FA102','02-MAR-23','09-MAR-23');
+INSERT INTO BOOK_LENDING VALUES('B101','L1','S103','04-APR-22','09-JUN-22');
 
 
---------------------------------------------------------------------------------
+
+******************************************************************************
+//OUTPUT 
+
+SQL> SELECT * FROM BOOK_LENDING;
+
+BOOK_ID              PROGRAMME_ID         CARD_NO              DATE_OUT  DUE_DATE
+-------------------- -------------------- -------------------- --------- ---------
+B101                 L1                   FA101                02-JAN-21 09-JAN-21
+B101                 L1                   FA102                02-MAR-23 09-MAR-23
+B102                 L1                   FA102                02-MAR-23 09-MAR-23
+B101                 L2                   FA102                02-MAR-23 09-MAR-23
+B101                 L1                   S103                 04-APR-22 09-JUN-22
+
+
+*****************************************************************************
+
+
+---------------------------------------------------------------------------
+ 
+
+QUERY 1:
+
+SELECT B.BOOK_ID, TITLE, PUBLISHER_NAME, AUTHOR_NAME, NO_OF_COPIES FROM BOOK B, BOOK_AUTHORS A, BOOK_COPIES BC
+WHERE B.BOOK_ID=BC.BOOK_ID AND 
+B.BOOK_ID=A.BOOK_ID;
+
+******************************************************************************
+//OUTPUT 
+
+BOOK_ID              TITLE                                    PUBLISHER_NAME       AUTHOR_NAME          NO_OF_COPIES
+-------------------- ---------------------------------------------------------------------------------------------------------------------------------
+B101                 DBMS                                     	Pearson              		Elmarsi                        99
+B101                 DBMS                                     	Pearson              		Navathe                       99
+B101                 DBMS                                     	Pearson              		Ramakrishnan             99
+B102                 AIML                                     	TataMcGraw           		Elaine                          99
+
+
+
+*****************************************************************************
+
+
+---------------------------------------------------------------------------
+
+QUERY 2:
+ 
+SELECT CARD_NO FROM BOOK_LENDING
+WHERE DATE_OUT BETWEEN '01-JAN-2023' AND '30-JUN-2023'
+GROUP BY CARD_NO HAVING COUNT(*)>=03;
+
+******************************************************************************
+//OUTPUT 
+
+
+CARD_NO
+--------------------
+FA102
+
+
+
+*****************************************************************************
+
+
+---------------------------------------------------------------------------
+
+QUERY 3:
+
+SQL> DELETE FROM BOOK WHERE BOOK_ID=&bid;
+******************************************************************************
+//OUTPUT 
+Enter value for bid: 'B103'
+old   1: DELETE FROM BOOK WHERE BOOK_ID=&bid
+new   1: DELETE FROM BOOK WHERE BOOK_ID='B103'
+
+1 row deleted.
+
+*****************************************************************************
+
+
+---------------------------------------------------------------------------
+
+
+
+QUERY 4:
+
+CREATE TABLE BOOK1(
+BOOK_ID VARCHAR2(20) PRIMARY KEY,
+TITLE VARCHAR2(40),
+PUBLISHER_NAME VARCHAR2(20) references
+PUBLISHER(NAME) on delete cascade,
+PUB_YEAR INT)
+PARTITION BY RANGE(PUB_YEAR)
+(PARTITION P1 VALUES LESS THAN(2001),
+PARTITION P2 VALUES LESS THAN(2005),
+PARTITION P3 VALUES LESS THAN(2010),
+PARTITION P4 VALUES LESS THAN(MAXVALUE));
+
+
+INSERT INTO BOOK1 VALUES('B101','DBMS','Pearson',2017);
+INSERT INTO BOOK1 VALUES('B102','AIML','TataMcGraw',2009);
+INSERT INTO BOOK1 VALUES('B103','DCN','Pearson',2017);
+INSERT INTO BOOK1 VALUES('B104','ATC','Oxford',2017);
+INSERT INTO BOOK1 VALUES('B105','Python','OReilly',2014);
+INSERT INTO BOOK1 VALUES('B106','Hadoop','Pearson',2000);
+******************************************************************************
+//OUTPUT 
+
+SQL> SELECT * FROM BOOK1 PARTITION(P1);
+
+BOOK_ID              TITLE                                    PUBLISHER_NAME         PUB_YEAR
+-------------------- ---------------------------------------- -------------------- ----------
+B106                     Hadoop                                   Pearson                           2000
+
+SQL> SELECT * FROM BOOK1 PARTITION(P2);
+
+no rows selected
+
+SQL> SELECT * FROM BOOK1 PARTITION(P3);
+
+BOOK_ID              TITLE                                    PUBLISHER_NAME         PUB_YEAR
+-------------------- ---------------------------------------- -------------------- ----------
+B102                 AIML                                     TataMcGraw                 2009
+
+SQL> SELECT * FROM BOOK1 PARTITION(P4);
+
+BOOK_ID              TITLE                                    PUBLISHER_NAME         PUB_YEAR
+-------------------- ---------------------------------------- -------------------- ----------
+B101                 DBMS                                     Pearson                    2017
+B103                 DCN                                      Pearson                    2017
+B104                 ATC                                      Oxford                     2017
+B105                 Python                                   OReilly                    2014
+
+
+
+*****************************************************************************
+
+
+---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
